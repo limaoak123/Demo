@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<style type="text/css">
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		#ball{
+			width: 30px;
+			height: 30px;
+			background: salmon;
+			position: absolute;
+			left: 400px;
+			top: 100px;
+			border-radius:50% ;
+		}
+		.trail{
+			background: #000000;
+			width: 1px;
+			height: 1px;
+			position: absolute;
+		}
+	</style>
+	<body>
+		<div id="ball"></div>
+	</body>
+</html>
+<script type="text/javascript">
+	var ball = document.getElementById("ball");
+	/*var x=700,y=300,a=300,b=200,z=0,arr=[];
+	for (var i = 0; i < 360; i++) {
+		var divs=document.createElement("div"),
+			rad=(Math.PI/180)*i,
+			x1=a*Math.sin(rad)+x,
+			y1=(b*Math.cos(rad))+y;
+			arr[i]=[];
+			arr[i][0]=x1;
+			arr[i][1]=y1;
+		divs.className="trail";
+		divs.style.left = x1 + "px";
+		divs.style.top = y1 + "px";		
+		document.body.appendChild(divs);
+	};
+	var timer=setInterval(function(){
+		if(z>=360){
+			z=0;
+		}
+		ball.style.left = arr[z][0]-ball.offsetWidth/2+"px";
+		ball.style.top = arr[z][1]-ball.offsetHeight/2 + "px";
+		z+=1;
+	},20)*/
+		
+	var r = 200;
+	var d = 100;
+	var deg = 90;
+	var l = ball.offsetLeft+ball.offsetWidth/2;
+	var t = ball.offsetTop + ball.offsetHeight + d;
+	setInterval(function(){
+		ball.style.left = l + Math.cos(deg*Math.PI/180)*r + "px";
+		ball.style.top = t - Math.sin(deg*Math.PI/180)*d + "px";
+		deg+=5;
+	},20);
+	
+</script>
