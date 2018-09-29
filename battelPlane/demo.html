@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="dahuiji.css" />
+</head>
+<body>
+	<div id="body_main" class="main">
+			<ul id="options" class="options">
+				<li level="100">傻傻赛啦</li>
+				<li level="200">比较困难</li>
+				<li level="300">非常困难</li>
+				<li level="400">超级困难</li>
+			</ul>
+	</div>
+</body>	
+</html>	
+<script src="../public.js"></script>
+<script src="../animate10.0.js"></script>
+<script type="text/javascript">
+	
+	/*
+	 * 点击选择难度
+	 * 欢迎页面
+	 * 		logo
+	 * 		小飞机欢迎动画
+	 * 		背景动画
+	 * 3秒后
+	 * 	logo 小飞机欢迎动画 消失
+	 * 		战斗机出场，敌机场 子弹发射，碰撞，子弹爆炸，敌机爆炸。
+	 * 
+	 * 
+	 * 角色：
+	 * 	
+	 * 引擎：engine
+	 * 		属性：options body_main（战场）
+	 * 		功能： 点击选择难度 
+	 * 				logo
+	 * 				小飞机欢迎动画
+	 * 				背景动画
+	 *战斗机：
+	 * 	属性：body_main（战场）
+	 * 	功能：创建战斗机，战斗机移动，子弹发射
+	 * 
+	 * 
+	 * 子弹：
+	 *	 属性：body_main（战场）
+	 * 	功能：创建子弹，子弹机移动，子弹与敌机碰撞，子弹爆炸，子弹消失。
+	 * 
+	 * 
+	 * 敌机：
+	 * 	属性：body_main（战场
+	 * 功能：创建敌机，敌机移动，敌机与子弹碰撞，敌机爆炸，敌机消失。
+	 * 
+	 */
+	
+	function Engine(){
+		this.body_main = document.getElementById("body_main");
+		this.options = document.getElementById("options");
+		this.enemyies = new Set();
+		//游戏难度
+		this.level = 0;
+		//初始化引擎的功能
+		this.innit();
+		
+	}
+	/*
+	 *  引擎：engine
+	 * 		属性：options body_main（战场）
+	 * 		功能： 点击选择难度 
+	 * 				logo
+	 * 				小飞机欢迎动画
+	 * 				背景动画
+	 */
+	Engine.prototype.innit = function(){
+		this.tableChoise();
+	}
+	//难度选择
+	Engine.prototype.tableChoise = function(){
+		var that = this;
+		for (var i = 0; i < this.options.children.length; i++) {
+			this.options.children[i].onclick = function(){
+				//保存游戏难度
+				that.level = this.getAttribute("level");
+				this.parentNode.remove();
+				//欢迎界面出场
+				that.showLogo();
+			}
+		}
+	}
+	//欢迎界面出场,显示logo
+	Engine.prototype.showLogo = function(){
+		//显示logo
+		this.logo = document.createElement("div");
+		this.logo.className = "logo";
+		this.body_main.appendChild(this.logo);
+		//显示动画小飞机
+		
+		this.smallPlane = document.createElement("div");
+		this.smallPlane.className = "loading";
+		this.body_main.appendChild(this.smallPlane);
+		
+		var index = 1;
+		var smallPlaneTimer = setInterval(function(){
+			index++;
+			this.smallPlane.style.background = `url(images/loading${index}.png) no-repeat`;
+			if(index == 3){
+				index=0;
+			}
+		}.bind(this),500);
+		
+		
+		//战场背景动画
+		var bgY = 0;
+		setInterval(function(){
+			bgY+=2;
+			this.body_main.style.backgroundPositionY = bgY + "px";
+			
+		},20);
+		
+		//当三秒后，logo和小飞机消失，战斗机和敌机出场
+		setTimeout(function(){
+			this.logo.remove();
+			this.smallPlane.remove();
+			clearInterval(smallPlaneTimer);
+			
+			//游戏开始
+			this.playGame();
+			
+		}.bind(this),3000);
+	}
+	
+	Engine.prototype.playGame = function(){
+		//战斗机
+		new MyPlane(this);
+		//敌机出场
+		//this.enemyies.add()当产生一架敌机时，就在集合时把敌机对象保存下来，提供给与子弹 发生碰撞时使用。
+		setInterval(function(){
+			this.enemyies.add(new Enemy(this,"enemy-small"));
+		}.bind(this),1000)
+		setInterval(function(){
+			this.enemyies.add(new Enemy(this,"enemy-middle"));
+		}.bind(this),3000)
+		setInterval(function(){
+			this.enemyies.add(new Enemy(this,"enemy-large"));
+		}.bind(this),8000)
+	}
+	/*
+	 *  战斗机：
+	 * 	属性：body_main（战场）
+	 * 	功能：创建战斗机，战斗机移动，子弹发射
+	 */
+	function MyPlane(engine){
+		//战场
+		this.body_main = engine.body_main;
+		this.level = engine.level;
+		this.enemyies = engine.enemyies;
+		//初始化敌机功能
+		this.init();
+		
+	}
+	MyPlane.prototype.init = function(){
+		//创建战斗机
+		this.creatMyPlane();
+		//战斗机移动
+		this.myPlaneMove();
+		//子弹发射
+		//new Bullet(this);
+		setInterval(function(){
+			new Bullet(this);
+		}.bind(this),this.level);
+	}
+	MyPlane.prototype.creatMyPlane = function(){
+		this.plane = document.createElement("div");
+		this.plane.className = "my-warplain";
+		this.body_main.appendChild(this.plane);
+		this.plane.style.bottom = 0;
+		this.plane.style.left = this.body_main.offsetWidth/2 - this.plane.offsetWidth/2 + "px";
+	}
+	MyPlane.prototype.myPlaneMove = function(){
+		var that = this;
+		this.body_main.onmousemove = function(e){
+			var e = e || event;
+			
+			var l = e.pageX - this.offsetLeft - that.plane.offsetWidth/2;
+			var left = this.offsetWidth - that.plane.offsetWidth;
+			l = l < 0 ? 0 : ( l > left ? left : l );
+			
+			that.plane.style.left = l + "px";
+			
+		}
+	}
+	/*
+	 * 子弹：
+	 *	 属性：body_main（战场）
+	 * 	功能：创建子弹，子弹机移动，子弹与敌机碰撞，子弹爆炸，子弹消失。
+	 * 
+	 * 子弹与敌机碰撞：在子弹运动的过程，会与敌机发生碰撞。
+	 * 
+	 * 
+	 */
+	//子弹
+	function Bullet(myPlane){
+		this.body_main = myPlane.body_main;
+		this.plane = myPlane.plane;
+		this.enemyies = myPlane.enemyies;
+		//初始化子弹功能
+		this.init();
+	}
+	Bullet.prototype.init = function(){
+		//创建子弹，
+		this.createBullet();
+		//子弹机移动
+		this.bulletMove();
+	}
+	//创建子弹
+	Bullet.prototype.createBullet = function(){
+		this.bullet = document.createElement("div");
+		this.bullet.className = "bullet";
+		this.body_main.appendChild(this.bullet);
+		this.bullet.style.left = this.plane.offsetLeft+this.plane.offsetWidth/2-this.bullet.offsetWidth/2+"px";
+		this.bullet.style.top = this.plane.offsetTop - this.bullet.offsetHeight + "px";
+		
+	}
+	//子弹机移动
+	Bullet.prototype.bulletMove = function(){
+		this.bulletTimer = setInterval(function(){
+			this.bullet.style.top = this.bullet.offsetTop - 4 + "px";
+			
+			//移动过程
+			//与敌机发生碰撞
+			//isPZ(this.bullet,所有的敌机)
+			//未知是敌机
+			//如何获取敌机
+			//如果有一个属性，敌机在战场出时把敌机保存下来，如何保存
+			//console.log(this.enemyies);
+			//遍历所有的敌机，与子弹发生碰撞
+			for(var ele of this.enemyies){
+				//console.log(ele);
+				if(isPZ(this.bullet,ele.enemy)){
+					//发生了碰撞
+					//子弹爆炸
+					this.bulletBomb();
+					//子弹消失。
+					//敌机受伤	
+					ele.hurt();
+				}
+			}
+			
+			
+			if(this.bullet.offsetTop<-this.bullet.offsetHeight){
+				this.bullet.remove();
+				clearInterval(this.bulletTimer);
+			}
+		}.bind(this),10);
+	}
+	Bullet.prototype.bulletBomb = function(){
+		this.bullet.className = "bullet_die";
+		clearInterval(this.bulletTimer);
+		setTimeout(function(){
+			this.bullet.remove();
+		}.bind(this),100);
+	}
+	
+	/*
+	 *  敌机：
+	 * 	属性：body_main（战场
+	 * 功能：创建敌机，敌机移动，敌机与子弹碰撞，敌机爆炸，敌机消失。
+	 * 
+	 * 碰撞：
+	 * 		
+	 * 
+	 */
+	//敌机
+	function Enemy(engin,enemyType){
+		this.body_main = engin.body_main;
+		this.type = enemyType;
+		this.enemyies = engin.enemyies;
+		//初始化敌机功能
+		this.init();
+	}
+	Enemy.prototype.init = function(){
+		//创建敌机
+		this.createEnemy();
+		//敌机袭击
+		this.enemyMove();
+	}
+	Enemy.prototype.createEnemy = function(){
+		this.enemy = document.createElement("div");
+		//this.moveSpeed = 0;
+		switch(this.type){
+			case "enemy-small":
+				this.enemy.className = "enemy-small";
+				this.moveSpeed = 50;
+				//this.enemies = 
+				this.xue = 1;
+				this.die = ["plain1_die1","plain1_die2","plain1_die3"];
+				break;
+			case "enemy-middle":
+				this.enemy.className = "enemy-middle";
+				this.moveSpeed = 100;
+				this.xue = 3;
+				this.die = ["plain2_die1","plain2_die2","plain2_die3","plain2_die4"];
+				break;
+			case "enemy-large":
+				this.enemy.className = "enemy-large";
+				this.moveSpeed = 150;
+				this.xue = 6;
+				this.die = ["plain3_die1","plain3_die2","plain3_die3","plain3_die4","plain3_die5","plain3_die6"];
+				break;
+		}
+		
+		this.body_main.appendChild(this.enemy);
+		var randLeft = getRand(0,this.body_main.offsetWidth-this.enemy.offsetWidth);
+		this.enemy.style.left = randLeft + "px";
+		this.enemy.style.top = -this.enemy.offsetHeight + "px";
+		
+	}
+	Enemy.prototype.enemyMove = function(){
+		var speed = 0
+		this.enemyTimer = setInterval(function(){
+			speed++;
+			this.enemy.style.top = this.enemy.offsetTop + speed + "px";
+			if(this.enemy.offsetTop>this.body_main.offsetHeight){
+				this.enemy.remove();
+				clearInterval(this.enemyTimer);
+			}
+		}.bind(this),this.moveSpeed);
+	}
+	Enemy.prototype.hurt = function(){
+		
+		this.xue--;
+		if(this.xue==0){
+			this.enemyBomb();
+		}
+		
+	}
+	Enemy.prototype.enemyBomb = function(){
+		
+		clearInterval(this.enemyTimer);
+		this.enemyies.delete(this);
+		setInterval(function(){
+			if(this.die.length == 0){
+				this.enemy.remove();
+				return;
+			}
+			this.enemy.style.background = `url(images/${this.die.shift()}.png) no-repeat`;
+		}.bind(this),200);
+	}
+	new Engine();
+	
+	
+</script>
